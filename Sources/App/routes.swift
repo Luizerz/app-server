@@ -32,8 +32,9 @@ class MQTTClient {
 
     }
 
-    func recive(id:String) async throws -> [String] {
-        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+    func recive(user: User) async throws -> [String] {
+        let id = user.id
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 10)
         var connection: AMQPConnection
         var channel: AMQPChannel
 
@@ -43,12 +44,18 @@ class MQTTClient {
         channel = try await connection.openChannel()
         //            print("Succesfully opened a channel")
         try await channel.queueDeclare(name: id, durable: false)
-        let consumer = try await channel.basicConsume(queue: "test", noAck:true)
-        var msgArr: [String] = []
+        let consumer = try await channel.basicConsume(queue: id, noAck:true)
+
         for try await msg in consumer {
             print("Succesfully consumed a message", String(buffer: msg.body))
-            msgArr.append(String(buffer: msg.body))
+            let decoded = try! JSONDecoder().decode(Message.self, from: msg.body)
+            print(decoded)
+            print(id)
+            let verifiedMessage = VerifyMessage(from: decoded.from, content: [decoded]).toData()
+            let wrapper = DataWrapper(contentType: .verifyMessages, content: verifiedMessage).toData()
+            try await user.ws.send(raw: wrapper, opcode: .binary)
         }
+        try await connection.close()
         return msgArr
     }
 

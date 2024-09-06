@@ -19,7 +19,7 @@ struct Message: Codable {
 
 struct VerifyMessage: Codable {
     let from: String
-    let content: [String]
+    let content: [Message]
     func toData() -> Data {
         return try! JSONEncoder().encode(self)
     }

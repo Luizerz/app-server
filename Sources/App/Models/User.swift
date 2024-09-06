@@ -11,4 +11,5 @@ import Foundation
 struct User {
     let id: String
     let ws: WebSocket
+    var mqttClient: MQTTClient = MQTTClient()
 }

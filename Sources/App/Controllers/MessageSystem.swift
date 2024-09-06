@@ -11,7 +11,6 @@ import Foundation
 final class MessageSystem: @unchecked Sendable  {
 
     private var clients: [User] = []
-    private var mqttClient: MQTTClient = MQTTClient()
 
 
     func connect(_ req: Request, _ ws: WebSocket) {
@@ -36,13 +35,16 @@ final class MessageSystem: @unchecked Sendable  {
                 }
             case .verifyMessages:
                 let message = try! JSONDecoder().decode(VerifyMessage.self, from: wrappedData.content)
-                do {
-                    let messages = try await self.mqttClient.recive(id: message.from)
-                    let verifiedMessages = VerifyMessage(from: message.from, content: messages)
-                    let dataWrapper = DataWrapper(contentType: .verifyMessages, content: verifiedMessages.toData()).toData()
-                    try await user.ws.send(raw: dataWrapper, opcode: .binary)
-                } catch {
-                    print(error)
+                if let user = self.findUser(id: id) {
+                    do {
+                        let messages = try await user.mqttClient.recive(user: user)
+                        let mappedMessages = messages.map { return Message(from: message.from, to: user.id, content: $0)}
+                        let verifiedMessages = VerifyMessage(from: message.from, content: mappedMessages.reversed())
+                        let dataWrapper = DataWrapper(contentType: .verifyMessages, content: verifiedMessages.toData()).toData()
+                        try await user.ws.send(raw: dataWrapper, opcode: .binary)
+                    } catch {
+                        print(error)
+                    }
                 }
             }
         }
@@ -62,12 +64,18 @@ final class MessageSystem: @unchecked Sendable  {
             let client = self.clients.first { $0.id == message.to }
             try await client?.ws.send(raw: DataWrapper(contentType: .message, content: message.toData()).toData(), opcode: .binary)
         } else {
-            try await self.mqttClient.send(to: message.to, msg: ByteBuffer(data: message.toData()))
+            if let user = findUser(id: message.from) {
+                try await user.mqttClient.send(to: message.to, msg: ByteBuffer(data: message.toData()))
+            }
         }
     }
 
     private func disconnect(id: String){
         let index = self.clients.firstIndex{$0.id == id}!
         self.clients.remove(at: index)
+    }
+
+    private func findUser(id: String) -> User? {
+        return self.clients.first{ $0.id == id }
     }
 }
