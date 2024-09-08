@@ -19,6 +19,7 @@ final class MessageSystem: @unchecked Sendable  {
         let id = req.parameters.get("id")!
         if (findUser(id: id) == nil) {
             let user = User(id: id, ws: ws)
+            user.isOnline = true
             self.clients.append(user)
         }
 
