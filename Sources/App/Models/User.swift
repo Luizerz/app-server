@@ -7,9 +7,15 @@
 
 import Vapor
 import Foundation
+import AMQPClient
 
-struct User {
+class User {
     let id: String
     let ws: WebSocket
     var mqttClient: MQTTClient = MQTTClient()
+    var isOnline: Bool = false
+    init(id: String, ws: WebSocket) {
+        self.id = id
+        self.ws = ws
+    }
 }
