@@ -30,7 +30,7 @@ struct MQTTClient {
 
     }
 
-    func recive(id: String) async throws  {
+    func recive(id: String) async throws -> [Message] {
 
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         var connection: AMQPConnection
@@ -38,14 +38,16 @@ struct MQTTClient {
 
         connection = try await AMQPConnection.connect(use: eventLoopGroup.next(), from: .init(connection: .plain, server: .init()))
         channel = try await connection.openChannel()
-
+        var messages: [Message] = []
         try await channel.queueDeclare(name: id)
         while true {
-            guard let msg = try await channel.basicGet(queue: id, noAck: true) else {
+            guard let frame = try await channel.basicGet(queue: id, noAck: true) else {
                 print("No message currently available")
                 break
             }
-            print(msg)
+            let msg = try! JSONDecoder().decode(Message.self, from: frame.message.body)
+            messages.append(msg)
         }
+        return messages
     }
 }

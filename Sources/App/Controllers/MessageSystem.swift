@@ -42,7 +42,11 @@ final class MessageSystem: @unchecked Sendable  {
 
                 do {
                     let user = self.findUser(id: id)!
-                    try await user.mqttClient.recive(id: user.id)
+                    let messages = try await user.mqttClient.recive(id: user.id)
+                    let verifiedDTO = VerifyMessage(from: "", content: messages).toData()
+                    let dataWrapper = DataWrapper(contentType: .verifyMessages, content: verifiedDTO).toData()
+                    try await ws.send(raw: dataWrapper, opcode: .binary)
+
                 } catch {
                     print(error)
                 }
