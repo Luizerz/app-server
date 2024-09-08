@@ -21,6 +21,9 @@ final class MessageSystem: @unchecked Sendable  {
             let user = User(id: id, ws: ws)
             user.isOnline = true
             self.clients.append(user)
+        } else {
+            let user = findUser(id: id)
+            user?.isOnline = true
         }
 
         ws.onText { ws, msg in
