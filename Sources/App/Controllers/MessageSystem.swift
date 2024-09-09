@@ -31,7 +31,7 @@ final class MessageSystem: @unchecked Sendable  {
         }
 
         ws.onBinary { ws, buffer in
-            let wrappedData = try! buffer.decodedToDataWrapper()
+            let wrappedData = try! buffer.decodedToDataContainer()
 
             switch wrappedData.contentType {
             case .message:
@@ -48,8 +48,8 @@ final class MessageSystem: @unchecked Sendable  {
                     let user = self.findUser(id: id)!
                     let messages = try await user.mqttClient.recive(id: user.id)
                     let verifiedDTO = VerifyMessage(from: "", content: messages).toData()
-                    let dataWrapper = DataWrapper(contentType: .verifyMessages, content: verifiedDTO).toData()
-                    try await ws.send(raw: dataWrapper, opcode: .binary)
+                    let dataContainer = DataContainer(contentType: .verifyMessages, content: verifiedDTO).toData()
+                    try await ws.send(raw: dataContainer, opcode: .binary)
 
                 } catch {
                     print(error)
@@ -72,7 +72,7 @@ final class MessageSystem: @unchecked Sendable  {
 
         if isUserOnline(id: message.to) {
             let client = self.clients.first { $0.id == message.to }
-            try await client?.ws.send(raw: DataWrapper(contentType: .message, content: message.toData()).toData(), opcode: .binary)
+            try await client?.ws.send(raw: DataContainer(contentType: .message, content: message.toData()).toData(), opcode: .binary)
         } else {
             if let user = findUser(id: message.from) {
                 try await user.mqttClient.send(to: message.to, msg: ByteBuffer(data: message.toData()))

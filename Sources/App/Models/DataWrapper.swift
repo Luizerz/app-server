@@ -13,7 +13,7 @@ enum DTO: Codable {
     case verifyMessages
 }
 
-struct DataWrapper: Codable {
+struct DataContainer: Codable {
     let contentType: DTO
     let content: Data
 
@@ -23,7 +23,7 @@ struct DataWrapper: Codable {
 }
 
 extension ByteBuffer {
-    func decodedToDataWrapper() throws -> DataWrapper {
-        return try JSONDecoder().decode(DataWrapper.self, from: self)
+    func decodedToDataContainer() throws -> DataContainer {
+        return try JSONDecoder().decode(DataContainer.self, from: self)
     }
 }
