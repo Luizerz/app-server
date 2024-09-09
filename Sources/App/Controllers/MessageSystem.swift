@@ -46,7 +46,7 @@ final class MessageSystem: @unchecked Sendable  {
 
                 do {
                     let user = self.findUser(id: id)!
-                    let messages = try await user.mqttClient.recive(id: user.id)
+                    let messages = try await user.momClient.recive(id: user.id)
                     let verifiedDTO = VerifyMessage(from: "", content: messages).toData()
                     let dataContainer = DataContainer(contentType: .verifyMessages, content: verifiedDTO).toData()
                     try await ws.send(raw: dataContainer, opcode: .binary)
@@ -75,7 +75,7 @@ final class MessageSystem: @unchecked Sendable  {
             try await client?.ws.send(raw: DataContainer(contentType: .message, content: message.toData()).toData(), opcode: .binary)
         } else {
             if let user = findUser(id: message.from) {
-                try await user.mqttClient.send(to: message.to, msg: ByteBuffer(data: message.toData()))
+                try await user.momClient.send(to: message.to, msg: ByteBuffer(data: message.toData()))
             }
         }
     }

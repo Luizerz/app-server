@@ -1,7 +1,7 @@
 import Vapor
 import AMQPClient
 
-struct MQTTClient {
+struct MOMClient {
 
 
     func disconnect() async throws {
