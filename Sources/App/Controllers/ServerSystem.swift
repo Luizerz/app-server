@@ -9,7 +9,7 @@ import Vapor
 import Foundation
 import AMQPClient
 
-final class MessageSystem: @unchecked Sendable  {
+final class ServerSystem: @unchecked Sendable  {
 
     private var clients: [User] = []
 

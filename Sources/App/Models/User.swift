@@ -12,7 +12,7 @@ import AMQPClient
 class User {
     let id: String
     let ws: WebSocket
-    var mqttClient: MOMClient = MOMClient()
+    var momClient: MOMClient = MOMClient()
     var isOnline: Bool = false
     init(id: String, ws: WebSocket) {
         self.id = id
